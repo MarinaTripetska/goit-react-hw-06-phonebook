@@ -1,39 +1,54 @@
-import { useState } from 'react'
-import PropTypes from 'prop-types'
-import { MdAddIcCall } from 'react-icons/md'
-import { Form, AreaName, AreaNumber, SubmitBtn } from './ContactForm.styled'
+import { useState } from 'react';
+import { MdAddIcCall } from 'react-icons/md';
+import { Form, AreaName, AreaNumber, SubmitBtn } from './ContactForm.styled';
+import { useSelector, useDispatch } from 'react-redux';
+import { addContact, editContact } from '../../redux/app';
+import notify from '../../nofifications/notifyError';
 
-export default function ContactForm({ handleSubmit }) {
-  const [name, setName] = useState('')
-  const [number, setNumber] = useState('')
+const shortid = require('shortid');
 
-  const handleChange = e => {
-    const { name, value } = e.target
+export default function ContactForm({ contactId, closeForm }) {
+  const contacts = useSelector(state => state.contacts);
+  const contactState = contacts.find(contact => contact.id === contactId);
 
-    switch (name) {
-      case 'name':
-        setName(value)
-        break
-
-      case 'number':
-        setNumber(value)
-        break
-
-      default:
-        return
-    }
-  }
+  const [inputName, setInputName] = useState(() =>
+    contactId ? contactState.name : ''
+  );
+  const [inputNumber, setInputNumber] = useState(() =>
+    contactId ? contactState.number : ''
+  );
+  const dispatch = useDispatch();
 
   const onFormSubmit = e => {
-    e.preventDefault()
-    handleSubmit(name, number)
-    reset()
-  }
+    e.preventDefault();
 
-  const reset = () => {
-    setName('')
-    setNumber('')
-  }
+    const findSameName = contacts.find(
+      ({ name }) => name.toLowerCase() === inputName.toLowerCase()
+    );
+
+    if (contactId) {
+      !findSameName
+        ? dispatch(
+            editContact({ id: contactId, name: inputName, number: inputNumber })
+          )
+        : notify(`${inputName} is already in contacts!`);
+
+      closeForm();
+    } else {
+      !findSameName
+        ? dispatch(
+            addContact({
+              id: shortid.generate(),
+              name: inputName,
+              number: inputNumber,
+            })
+          )
+        : notify(`${inputName} is already in contacts!`);
+
+      setInputName('');
+      setInputNumber('');
+    }
+  };
 
   return (
     <Form onSubmit={onFormSubmit}>
@@ -44,8 +59,8 @@ export default function ContactForm({ handleSubmit }) {
           name="name"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="The name can only contain letters, an apostrophe, a dash, and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan, etc."
-          onChange={handleChange}
-          value={name}
+          onChange={e => setInputName(e.target.value)}
+          value={inputName}
           required
         />
       </AreaName>
@@ -55,8 +70,8 @@ export default function ContactForm({ handleSubmit }) {
         <input
           type="tel"
           name="number"
-          onChange={handleChange}
-          value={number}
+          onChange={e => setInputNumber(e.target.value)}
+          value={inputNumber}
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="The phone number must be numeric and may contain spaces, dashes, parentheses, and may begin with +"
           required
@@ -66,14 +81,9 @@ export default function ContactForm({ handleSubmit }) {
       <br />
 
       <SubmitBtn type="submit">
-        <MdAddIcCall /> <span>Add contact</span>
+        <MdAddIcCall />
+        {contactId ? <span>Edit contact</span> : <span>Add contact</span>}
       </SubmitBtn>
     </Form>
-  )
-}
-ContactForm.defaultProps = {
-  handleSubmit: () => null,
-}
-ContactForm.propTypes = {
-  handleSubmit: PropTypes.func.isRequired,
+  );
 }
