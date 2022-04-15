@@ -21,4 +21,4 @@
 - react-toastify
 - shortid for generating unique keys
 - Redux/toolkit
-- Redux-rersist for work with LocalStarage
+- Redux-persist for work with LocalStarage

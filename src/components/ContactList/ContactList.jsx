@@ -1,7 +1,6 @@
 import ContactItem from '../ContactIItem';
 import styled from 'styled-components';
-import { useSelector, useDispatch } from 'react-redux';
-// import { removeContact } from '../../redux/app';
+import { useSelector } from 'react-redux';
 
 const StyledList = styled.ul`
   width: 100%;
